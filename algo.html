@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        select, input[type="range"], input[type="number"] {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        select {
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        input[type="range"] {
+            width: 150px;
+            accent-color: #667eea;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-ai {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-ai:hover:not(:disabled) {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .visualization {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .array-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 400px;
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .array-bar {
+            background: #3b82f6;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.1s ease;
+        }
+
+        .array-bar.comparing {
+            background: #ef4444;
+        }
+
+        .array-bar.sorted {
+            background: #10b981;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .ai-panel {
+            background: rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .ai-panel.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-panel h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-content {
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .algo-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .algo-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .algo-card.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .algo-card h4 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .algo-card p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .control-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .array-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Algorithm Visualizer</h1>
+            <p class="subtitle">Watch sorting algorithms come to life</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="algorithm">Algorithm:</label>
+                    <select id="algorithm">
+                        <option value="bubble">Bubble Sort - O(n²)</option>
+                        <option value="selection">Selection Sort - O(n²)</option>
+                        <option value="insertion">Insertion Sort - O(n²)</option>
+                        <option value="quick">Quick Sort - O(n log n)</option>
+                        <option value="merge">Merge Sort - O(n log n)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="arraySize">Array Size:</label>
+                    <input type="number" id="arraySize" min="10" max="100" value="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="speed">Speed:</label>
+                    <input type="range" id="speed" min="1" max="100" value="50">
+                    <span id="speedValue">50</span>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <button class="btn btn-primary" id="sortBtn">▶️ Sort</button>
+                <button class="btn btn-secondary" id="resetBtn">🔄 New Array</button>
+                <button class="btn btn-ai" id="aiBtn">🧠 AI Explain</button>
+            </div>
+        </div>
+
+        <div class="ai-panel" id="aiPanel">
+            <h3>🧠 AI Explanation</h3>
+            <div class="ai-content" id="aiContent">Click "AI Explain" to learn about the selected algorithm...</div>
+        </div>
+
+        <div class="visualization">
+            <div class="array-container" id="arrayContainer"></div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <span>Unsorted</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ef4444;"></div>
+                    <span>Comparing</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <span>Sorted</span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="comparisons">0</div>
+                    <div class="stat-label">Comparisons</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="swaps">0</div>
+                    <div class="stat-label">Swaps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time">0.0s</div>
+                    <div class="stat-label">Time Elapsed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="algo-info">
+            <div class="algo-card" data-algo="bubble">
+                <h4>Bubble Sort</h4>
+                <p>Time: O(n²) | Space: O(1)<br>Simple but inefficient for large datasets</p>
+            </div>
+            <div class="algo-card" data-algo="selection">
+                <h4>Selection Sort</h4>
+                <p>Time: O(n²) | Space: O(1)<br>Performs fewer swaps than bubble sort</p>
+            </div>
+            <div class="algo-card" data-algo="insertion">
+                <h4>Insertion Sort</h4>
+                <p>Time: O(n²) | Space: O(1)<br>Efficient for small or nearly sorted data</p>
+            </div>
+            <div class="algo-card" data-algo="quick">
+                <h4>Quick Sort</h4>
+                <p>Time: O(n log n) | Space: O(log n)<br>Fast and widely used in practice</p>
+            </div>
+            <div class="algo-card" data-algo="merge">
+                <h4>Merge Sort</h4>
+                <p>Time: O(n log n) | Space: O(n)<br>Stable and predictable performance</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let array = [];
+        let isRunning = false;
+        let comparisons = 0;
+        let swaps = 0;
+        let startTime = 0;
+
+        const arrayContainer = document.getElementById('arrayContainer');
+        const algorithmSelect = document.getElementById('algorithm');
+        const arraySizeInput = document.getElementById('arraySize');
+        const speedInput = document.getElementById('speed');
+        const speedValue = document.getElementById('speedValue');
+        const sortBtn = document.getElementById('sortBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const aiBtn = document.getElementById('aiBtn');
+        const aiPanel = document.getElementById('aiPanel');
+        const aiContent = document.getElementById('aiContent');
+
+        // Initialize
+        generateArray();
+        updateActiveAlgoCard();
+
+        // Event Listeners
+        speedInput.addEventListener('input', (e) => {
+            speedValue.textContent = e.target.value;
+        });
+
+        algorithmSelect.addEventListener('change', updateActiveAlgoCard);
+        resetBtn.addEventListener('click', generateArray);
+        sortBtn.addEventListener('click', startSorting);
+        aiBtn.addEventListener('click', getAIExplanation);
+
+        function generateArray() {
+            const size = parseInt(arraySizeInput.value);
+            array = Array.from({ length: size }, () => Math.floor(Math.random() * 380) + 20);
+            renderArray();
+            resetStats();
+        }
+
+        function renderArray(comparing = [], sorted = []) {
+            arrayContainer.innerHTML = '';
+            const barWidth = Math.max(100 / array.length - 0.5, 2);
+            
+            array.forEach((value, idx) => {
+                const bar = document.createElement('div');
+                bar.className = 'array-bar';
+                bar.style.height = `${value}px`;
+                bar.style.width = `${barWidth}%`;
+                
+                if (comparing.includes(idx)) {
+                    bar.classList.add('comparing');
+                } else if (sorted.includes(idx)) {
+                    bar.classList.add('sorted');
+                }
+                
+                arrayContainer.appendChild(bar);
+            });
+        }
+
+        function updateActiveAlgoCard() {
+            document.querySelectorAll('.algo-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            const activeCard = document.querySelector(`[data-algo="${algorithmSelect.value}"]`);
+            if (activeCard) activeCard.classList.add('active');
+        }
+
+        function resetStats() {
+            comparisons = 0;
+            swaps = 0;
+            document.getElementById('comparisons').textContent = '0';
+            document.getElementById('swaps').textContent = '0';
+            document.getElementById('time').textContent = '0.0s';
+        }
+
+        function updateStats() {
+            document.getElementById('comparisons').textContent = comparisons;
+            document.getElementById('swaps').textContent = swaps;
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            document.getElementById('time').textContent = `${elapsed}s`;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function startSorting() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            sortBtn.disabled = true;
+            resetBtn.disabled = true;
+            algorithmSelect.disabled = true;
+            arraySizeInput.disabled = true;
+            
+            resetStats();
+            startTime = Date.now();
+            
+            const algorithm = algorithmSelect.value;
+            
+            switch(algorithm) {
+                case 'bubble':
+                    await bubbleSort();
+                    break;
+                case 'selection':
+                    await selectionSort();
+                    break;
+                case 'insertion':
+                    await insertionSort();
+                    break;
+                case 'quick':
+                    await quickSort(0, array.length - 1);
+                    break;
+                case 'merge':
+                    await mergeSort(0, array.length - 1);
+                    break;
+            }
+            
+            renderArray([], array.map((_, i) => i));
+            
+            isRunning = false;
+            sortBtn.disabled = false;
+            resetBtn.disabled = false;
+            algorithmSelect.disabled = false;
+            arraySizeInput.disabled = false;
+        }
+
+        async function bubbleSort() {
+            const n = array.length;
+            
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    comparisons++;
+                    renderArray([j, j + 1], []);
+                    updateStats();
+                    await sleep(101 - speedInput.value);
+                    
+                    if (array[j] > array[j + 1]) {
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        swaps++;
+                    }
+                }
+            }
+        }
+
+        async function selectionSort() {
+            const n = array.length;
+            
+            for (let i = 0; i < n - 1; i++) {
+                let minIdx = i;
+                
+                for (let j = i + 1; j < n; j++) {
+                    comparisons++;
+                    renderArray([minIdx, j], Array.from({length: i}, (_, k) => k));
+                    updateStats();
+                    await sleep(101 - speedInput.value);
+                    
+                    if (array[j] < array[minIdx]) {
+                        minIdx = j;
+                    }
+                }
+                
+                if (minIdx !== i) {
+                    [array[i], array[minIdx]] = [array[minIdx], array[i]];
+                    swaps++;
+                }
+            }
+        }
+
+        async function insertionSort() {
+            const n = array.length;
+            
+            for (let i = 1; i < n; i++) {
+                let key = array[i];
+                let j = i - 1;
+                
+                renderArray([i], Array.from({length: i}, (_, k) => k));
+                await sleep(101 - speedInput.value);
+                
+                while (j >= 0 && array[j] > key) {
+                    comparisons++;
+                    renderArray([j, j + 1], Array.from({length: i}, (_, k) => k));
+                    updateStats();
+                    await sleep(101 - speedInput.value);
+                    
+                    array[j + 1] = array[j];
+                    swaps++;
+                    j--;
+                }
+                
+                array[j + 1] = key;
+            }
+        }
+
+        async function quickSort(low, high) {
+            if (low < high) {
+                const pi = await partition(low, high);
+                await quickSort(low, pi - 1);
+                await quickSort(pi + 1, high);
+            }
+        }
+
+        async function partition(low, high) {
+            const pivot = array[high];
+            let i = low - 1;
+            
+            for (let j = low; j < high; j++) {
+                comparisons++;
+                renderArray([j, high], []);
+                updateStats();
+                await sleep(101 - speedInput.value);
+                
+                if (array[j] < pivot) {
+                    i++;
+                    [array[i], array[j]] = [array[j], array[i]];
+                    swaps++;
+                }
+            }
+            
+            [array[i + 1], array[high]] = [array[high], array[i + 1]];
+            swaps++;
+            return i + 1;
+        }
+
+        async function mergeSort(left, right) {
+            if (left < right) {
+                const mid = Math.floor((left + right) / 2);
+                await mergeSort(left, mid);
+                await mergeSort(mid + 1, right);
+                await merge(left, mid, right);
+            }
+        }
+
+        async function merge(left, mid, right) {
+            const leftArr = array.slice(left, mid + 1);
+            const rightArr = array.slice(mid + 1, right + 1);
+            
+            let i = 0, j = 0, k = left;
+            
+            while (i < leftArr.length && j < rightArr.length) {
+                comparisons++;
+                renderArray([k], []);
+                updateStats();
+                await sleep(101 - speedInput.value);
+                
+                if (leftArr[i] <= rightArr[j]) {
+                    array[k] = leftArr[i];
+                    i++;
+                } else {
+                    array[k] = rightArr[j];
+                    j++;
+                }
+                swaps++;
+                k++;
+            }
+            
+            while (i < leftArr.length) {
+                array[k] = leftArr[i];
+                i++;
+                k++;
+                swaps++;
+            }
+            
+            while (j < rightArr.length) {
+                array[k] = rightArr[j];
+                j++;
+                k++;
+                swaps++;
+            }
+        }
+
+        async function getAIExplanation() {
+            const algoNames = {
+                bubble: 'Bubble Sort',
+                selection: 'Selection Sort',
+                insertion: 'Insertion Sort',
+                quick: 'Quick Sort',
+                merge: 'Merge Sort'
+            };
+            
+            const algoName = algoNames[algorithmSelect.value];
+            aiPanel.classList.add('show');
+            aiContent.textContent = 'Generating explanation...';
+            aiBtn.disabled = true;
+            
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 500,
+                        messages: [{
+                            role: 'user',
+                            content: `Explain ${algoName} algorithm concisely. Include: how it works, time complexity, space complexity, and when to use it. Keep it under 150 words.`
+                        }],
+                    }),
+                });
+
+                const data = await response.json();
+                const text = data.content.map(item => item.text || '').join('\n');
+                aiContent.textContent = text;
+            } catch (err) {
+                aiContent.textContent = 'Unable to connect to AI. This feature requires API setup. However, you can still visualize all the algorithms!';
+            } finally {
+                aiBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
